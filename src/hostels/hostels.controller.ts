@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, UploadedFile, UploadedFiles, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, UploadedFile, UploadedFiles, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { HostelsService } from './hostels.service';
 import { Hostel } from './schemas/hostels.schema';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -11,8 +11,8 @@ export class HostelsController {
   constructor(private hostelsService: HostelsService) {}
   
   @Get()
-  findAll(): Promise<Hostel[]> {
-    return this.hostelsService.findAll();
+  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort): Promise<Hostel[]> {
+    return this.hostelsService.findAll({skip, limit, filter, sort});
   }
 
   @Get(':id')

@@ -12,6 +12,7 @@ import {
   HttpCode,
   UseGuards,
   UseFilters,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,8 +28,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort) {
+    return this.userService.findAll({skip, limit, filter, sort});
   }
 
   @Get(':id')

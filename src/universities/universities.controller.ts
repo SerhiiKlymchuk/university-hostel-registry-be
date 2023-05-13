@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UseGuards,
   UseFilters,
+  Query,
 } from '@nestjs/common';
 import { UniversitiesService } from './universities.service';
 import { CreateUniversityDto } from './dto/create-university.dto';
@@ -24,8 +25,8 @@ export class UniversitiesController {
   constructor(private readonly universitiesService: UniversitiesService) {}
 
   @Get()
-  findAll() {
-    return this.universitiesService.findAll();
+  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort) {
+    return this.universitiesService.findAll({skip, limit, filter, sort});
   }
 
   @Get(':id')

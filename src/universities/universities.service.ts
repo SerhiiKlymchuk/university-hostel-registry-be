@@ -4,6 +4,7 @@ import { UpdateUniversityDto } from './dto/update-university.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { University, UniversityDocument } from './schemas/universities.schema';
 import { Model, Types } from 'mongoose';
+import { Params } from 'src/interfaces/params.interface';
 
 @Injectable()
 export class UniversitiesService {
@@ -12,8 +13,19 @@ export class UniversitiesService {
     private universityModel: Model<UniversityDocument>,
   ) {}
 
-  async findAll(): Promise<University[]> {
-    return await this.universityModel.find({});
+  async findAll(params: Params): Promise<University[]> {
+    const query = {
+      limit: params.limit || 10,
+      skip: params.skip || 0,
+      sort: '-updatedAt',
+      filter: this.getFilters(params.filter),
+    };
+
+    return await this.universityModel
+      .find(query.filter)
+      .skip(query.skip)
+      .limit(query.limit)
+      .sort(query.sort);
   }
 
   async create(createUniversityDto: CreateUniversityDto): Promise<University> {
@@ -52,5 +64,25 @@ export class UniversitiesService {
     } catch (error) {
       throw new BadRequestException('Invalid ID');
     }
+  }
+
+  private splitParam(param: string): any {
+    let paramArr = param.split(':');
+
+    return {
+      key: paramArr[0],
+      value: paramArr[1],
+    };
+  }
+
+  private getFilters(filterUnparsed): any {
+    let filterQuery = {};
+
+    if (filterUnparsed) {
+      const filter = this.splitParam(filterUnparsed);
+      filterQuery = { [filter.key]: { $regex: filter.value, $options: 'i' } };
+    }
+
+    return filterQuery;
   }
 }
