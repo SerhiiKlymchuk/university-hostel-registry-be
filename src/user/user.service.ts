@@ -10,6 +10,7 @@ import { ROLES, User, UserDocument } from './schemas/user.schema';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { Params } from 'src/interfaces/params.interface';
+import { ListResponse } from 'src/interfaces/list-response.interface';
 
 @Injectable()
 export class UserService {
@@ -20,7 +21,7 @@ export class UserService {
     private userModel: Model<UserDocument>,
   ) {}
 
-  async findAll(params: Params): Promise<User[]> {
+  async findAll(params: Params): Promise<ListResponse> {
     const query = {
       limit: params.limit || 10,
       skip: params.skip || 0,
@@ -28,12 +29,19 @@ export class UserService {
       filter: this.getFilters(params.filter),
     };
 
-    return await this.userModel.find()
+    const items = await this.userModel.find()
       .find(query.filter)
       .skip(query.skip)
       .limit(query.limit)
       .sort(query.sort)
       .select('-password');
+    
+    const count = await this.userModel.count(query.filter);
+
+    return {
+      items,
+      count
+    }
   }
 
   async findOne(id: string): Promise<User> {
@@ -120,6 +128,9 @@ export class UserService {
       const filter = this.splitParam(filterUnparsed);
       filterQuery = { [filter.key]: { $regex: filter.value, $options: 'i' } };
     }
+
+    // Hide admin from list
+    filterQuery = {...filterQuery, role: ROLES.EDITOR};
 
     return filterQuery;
   }

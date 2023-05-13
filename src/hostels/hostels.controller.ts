@@ -5,13 +5,14 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { UpdateHostelDto } from './dto/update-hostel.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { DbExceptionFilter } from 'src/filters/db-exception.filter';
+import { ListResponse } from 'src/interfaces/list-response.interface';
 
 @Controller('hostels')
 export class HostelsController {
   constructor(private hostelsService: HostelsService) {}
   
   @Get()
-  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort): Promise<Hostel[]> {
+  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort): Promise<ListResponse> {
     return this.hostelsService.findAll({skip, limit, filter, sort});
   }
 

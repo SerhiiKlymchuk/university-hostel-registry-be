@@ -19,13 +19,14 @@ import { UpdateUniversityDto } from './dto/update-university.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { DbExceptionFilter } from 'src/filters/db-exception.filter';
+import { ListResponse } from 'src/interfaces/list-response.interface';
 
 @Controller('universities')
 export class UniversitiesController {
   constructor(private readonly universitiesService: UniversitiesService) {}
 
   @Get()
-  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort) {
+  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort): Promise<ListResponse> {
     return this.universitiesService.findAll({skip, limit, filter, sort});
   }
 

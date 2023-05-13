@@ -7,6 +7,7 @@ import { HttpService } from '@nestjs/axios';
 import { forkJoin } from 'rxjs';
 import { UpdateHostelDto } from './dto/update-hostel.dto';
 import { Params } from 'src/interfaces/params.interface';
+import { ListResponse } from 'src/interfaces/list-response.interface';
 
 @Injectable()
 export class HostelsService {
@@ -16,7 +17,7 @@ export class HostelsService {
     ) {
     }
 
-    async findAll(params: Params): Promise<Hostel[]> {
+    async findAll(params: Params): Promise<ListResponse> {
         const query = {
             limit: params.limit || 10,
             skip: params.skip || 0,
@@ -24,14 +25,19 @@ export class HostelsService {
             filter: this.getFilters(params.filter)
         };
 
-        return await this.hostelModel.find(query.filter)
+        const items = await this.hostelModel
+            .find(query.filter)
             .skip(query.skip)
             .limit(query.limit)
             .sort(query.sort)
-            .populate({
-                path: 'university',
-                select: ['_id', 'name'],
-            });
+            .populate({path: 'university', select: "_id name logoImage"});
+            
+        const count = await this.hostelModel.count(query.filter);
+
+        return {
+            items,
+            count
+        }
     }
 
     async findById(id: string): Promise<Hostel> {
@@ -43,10 +49,13 @@ export class HostelsService {
     }
     
     async create(files: any, hostelDto: CreateHostelDto): Promise<Hostel> {
+        let fileUrls = [];
+        
         if(files && files.length) {
-            const fileUrls = await this.uploadFiles(files);
-            hostelDto.photos = fileUrls;      
+            fileUrls = await this.uploadFiles(files);
         }
+
+        hostelDto.photos = fileUrls;      
 
         const hostel = new this.hostelModel(hostelDto);
         return hostel.save();
@@ -57,10 +66,13 @@ export class HostelsService {
             throw new BadRequestException('Invalid ID');
         }
 
+        let fileUrls = [];
+
         if(files && files.length) {
-            const fileUrls = await this.uploadFiles(files);
-            hostelDto.photos = fileUrls;      
+            fileUrls = await this.uploadFiles(files);
         }
+
+        hostelDto.photos = fileUrls;      
 
         return this.hostelModel.findByIdAndUpdate({ _id: id }, hostelDto, {
             upsert: false,
@@ -89,12 +101,12 @@ export class HostelsService {
 
             formData.append('image', file.buffer.toString('base64'));
 
-            $uploads.push(this.httpService.post('https://api.imgbb.com/1/upload?expiration=60000000&key=a7ddfb3f1d94ab05f19d3c684a7162fd', formData))
+            $uploads.push(this.httpService.post('https://api.imgbb.com/1/upload?expiration=0&key=a7ddfb3f1d94ab05f19d3c684a7162fd', formData))
         });
 
         return (
             await forkJoin($uploads).toPromise()
-        ).map(u => u.data.data.url);
+        ).map(u => u.data.data.url).filter(u => u);
     }
 
     private splitParam(param: string): any{

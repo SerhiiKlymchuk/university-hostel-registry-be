@@ -20,6 +20,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { DbExceptionFilter } from 'src/filters/db-exception.filter';
+import { ListResponse } from 'src/interfaces/list-response.interface';
 
 @Controller('users')
 @UseGuards(AuthGuard)
@@ -28,7 +29,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort) {
+  findAll(@Query('skip') skip, @Query('limit') limit, @Query('filter') filter, @Query('sort') sort):  Promise<ListResponse> {
     return this.userService.findAll({skip, limit, filter, sort});
   }
 

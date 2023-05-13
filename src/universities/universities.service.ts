@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { University, UniversityDocument } from './schemas/universities.schema';
 import { Model, Types } from 'mongoose';
 import { Params } from 'src/interfaces/params.interface';
+import { ListResponse } from 'src/interfaces/list-response.interface';
 
 @Injectable()
 export class UniversitiesService {
@@ -13,7 +14,7 @@ export class UniversitiesService {
     private universityModel: Model<UniversityDocument>,
   ) {}
 
-  async findAll(params: Params): Promise<University[]> {
+  async findAll(params: Params): Promise<ListResponse> {
     const query = {
       limit: params.limit || 10,
       skip: params.skip || 0,
@@ -21,11 +22,18 @@ export class UniversitiesService {
       filter: this.getFilters(params.filter),
     };
 
-    return await this.universityModel
+    const items = await this.universityModel
       .find(query.filter)
       .skip(query.skip)
       .limit(query.limit)
       .sort(query.sort);
+    
+    const count = await this.universityModel.count(query.filter);
+
+    return {
+      items,
+      count
+    }
   }
 
   async create(createUniversityDto: CreateUniversityDto): Promise<University> {
